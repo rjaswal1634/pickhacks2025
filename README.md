@@ -17,8 +17,7 @@ As a kid, I spent hours glued to the screen, watching cartoons—but what if I c
 - **Frontend**: React.js, Node.js, TypeScript  
 - **Machine Learning**: MediaPipe, NumPy, Flask  
 
-We created the website (frontend) and connected it with our backend (server). We had to create two servers:  
-1. **Spring Framework (Java)**: Handles authorization and manages external APIs.
+So we created the website (front end) which was connected with our backend (servers). We had to created two server: 1) One with spring framework and Java: to handle authorization, handling external APIs, working Gemini Api. 2) One server using flask & python: This was to store our pose detection code. We sent the video captured from the website using webcam, frame-by-frame to the ML server and got the gesture as a json respone.
 
 ## Challenges we ran into
 - **Integration Difficulty**: One of us created a server using the Spring framework, hosted on his laptop, while the other hosted the website on their laptop. We found it really difficult to integrate the two because the server was not accessible from the outside, making it hard to connect the website and server.
