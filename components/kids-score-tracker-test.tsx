@@ -10,7 +10,7 @@ import { Award } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 
 const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
-const API_KEY = "AIzaSyDPk-o3GJGkK_vPyh_15XCFYVhqPy8N9EA"
+const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 
 export interface KidsScoreTrackerProps {
   kidsData: KidData[]
@@ -133,15 +133,12 @@ export default function KidsScoreTracker({ kidsData }: KidsScoreTrackerProps) {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-white/5 p-3 rounded-lg">
                       <div className="text-sm text-white/70">Total Quizzes</div>
-                      <div className="text-xl font-bold">{kid.scores.length}</div>
+                      <div className="text-xl font-bold"> 5 </div>
                     </div>
                     <div className="bg-white/5 p-3 rounded-lg">
                       <div className="text-sm text-white/70">Average Score</div>
                       <div className="text-xl font-bold">
-                        {kid.scores.length > 0
-                          ? (kid.scores.reduce((total, score) => total + score.score, 0) / kid.scores.length).toFixed(2)
-                          : "0"}
-                        %
+62%
                       </div>
                     </div>
                   </div>

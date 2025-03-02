@@ -7,17 +7,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, BarChart3, Users, Award, LogOut, LayoutDashboard } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
-import { useRouter } from "next/navigation"
+
 import KidsScoreTracker from "@/components/kids-score-tracker-test"
 import Chat from "@/components/gementor-chat"
-import FetchHiData from "@/components/hi"
-import { set } from "date-fns"
+
 
 // Mock data for 2weeks scores
 const mockKidData = [
   {
     id: "1",
-    name: "Emma",
+    name: "Emily",
     scores: [
       { date: "2025-02-01", score: 85 },
       { date: "2025-02-05", score: 78 },
@@ -29,127 +28,120 @@ const mockKidData = [
       { date: "2025-02-28", score: 97 },
     ],
   },
-  {
-    id: "2",
-    name: "Noah",
-    scores: [
-      { date: "2025-02-01", score: 72 },
-      { date: "2025-02-05", score: 80 },
-      { date: "2025-02-09", score: 75 },
-      { date: "2025-02-13", score: 85 },
-      { date: "2025-02-17", score: 82 },
-      { date: "2025-02-21", score: 88 },
-      { date: "2025-02-25", score: 90 },
-      { date: "2025-02-28", score: 86 },
-    ],
-  },
-  {
-    id: "3",
-    name: "Olivia",
-    scores: [
-      { date: "2025-02-01", score: 90 },
-      { date: "2025-02-05", score: 85 },
-      { date: "2025-02-09", score: 82 },
-      { date: "2025-02-13", score: 78 },
-      { date: "2025-02-17", score: 88 },
-      { date: "2025-02-21", score: 92 },
-      { date: "2025-02-25", score: 95 },
-      { date: "2025-02-28", score: 91 },
-    ],
-  },
 ]
 
 // Mock data - replace with actual API calls to your Java server
 const mockChildren = [
-  {name: "Emma", age: 8},
-  {name: "Noah", age: 6},
-  {name: "Olivia", age: 7}
+  { id: 1, name: "Emma", age: 8, correctAnswers: 45, totalQuestions: 60 },
+  { id: 2, name: "Noah", age: 10,  correctAnswers: 30, totalQuestions: 40 },
+  { id: 3, name: "Olivia", age: 7,  correctAnswers: 15, totalQuestions: 25 },
 ]
 
 const mockQuizHistory = [
-  { id: 1, childName: "Emma", quizName: "Cartoon Classics", score: "8/10", date: "2023-05-15" },
-  { id: 2, childName: "Noah", quizName: "Disney Heroes", score: "7/10", date: "2023-05-14" },
-  { id: 3, childName: "Olivia", quizName: "Superhero Quiz", score: "9/10", date: "2023-05-12" },
-  { id: 4, childName: "Olivia", quizName: "Cartoon Classics", score: "6/10", date: "2023-05-10" },
-  { id: 5, childName: "Noah", quizName: "Anime Characters", score: "8/10", date: "2023-05-08" },
+  { id: 1, childName: "Emily", quizName: "Cartoon Classics", score: "8/10", date: "2023-05-15" },
+  { id: 2, childName: "Emily", quizName: "Disney Heroes", score: "7/10", date: "2023-05-14" },
+  { id: 3, childName: "Emily", quizName: "Superhero Quiz", score: "9/10", date: "2023-05-12" },
+  { id: 4, childName: "Emily", quizName: "Cartoon Classics", score: "6/10", date: "2023-05-10" },
+  { id: 5, childName: "Emily", quizName: "Anime Characters", score: "8/10", date: "2023-05-08" },
 ]
+interface Child {
+  id: number;
+  name: string;
+  age: number;
+  correctAnswers: number;
+  totalQuestions: number;
+}
 
+interface ApiResponse {
+  data: Child[];
+}
 const kidsDataString = JSON.stringify({ mockKidData, mockChildren, mockQuizHistory });
 
 export default function ParentDashboard() {
   const [children, setChildren] = useState(mockChildren)
   const [quizHistory, setQuizHistory] = useState(mockQuizHistory)
   const [loading, setLoading] = useState(true)
-  const userString = localStorage.getItem("user");
-  const userData = userString ? JSON.parse(userString) : null;
-  const userid = userData ? userData.data : null;
+ 
   const [nchild, setNchild] = useState(0);
+  const [userId, setUserId] = useState(0);
+  const [totalquiz, setTotalquiz] = useState(0);
 
   useEffect(() => {
-    // Simulate API call to fetch data
+    if (typeof window !== "undefined") {
+      const userItem = localStorage.getItem("user")
+      const userData = userItem ? JSON.parse(userItem) : null
+      setUserId(userData ? userData.data : null)
+    }
+  }, []) // Empty dependency array - runs once on mount
+
+  // Second useEffect: Fetch data when userId is available
+  useEffect(() => {
     const fetchData = async () => {
+      if (!userId) return; // Don't run if userId isn't set yet
+
+      setLoading(true)
       try {
-        // Replace with actual API calls when ready
-        setChildren(mockChildren)
-        setQuizHistory(mockQuizHistory)
+        // First API call
+        const response = await fetch(`http://localhost:8080/public/child/user/${userId}`, {
+          method: "GET",
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch child data")
+        }
+
+        const data = await response.json()
+        setNchild(data.data)
+
+        // Second API call
+        const response2 = await fetch(`http://localhost:8080/public/user/child/${userId}`, {
+          method: "GET",
+        })
+
+        if (!response2.ok) {
+          throw new Error("Failed to fetch user child data")
+        }
+
+        const data_child = await response2.json()
+   
+
+        const updatedChildren: Child[] = (data_child as ApiResponse).data.map((child: Child) => ({
+          name: child.name,
+          id: child.id,
+          age: child.age,
+          correctAnswers: child.correctAnswers,
+          totalQuestions: child.totalQuestions,
+        }))
+
+        setChildren(updatedChildren)
+        
+        updatedChildren.forEach(async (child: Child) => {
+          const response5 = await fetch(`http://localhost:8080/public/child/score/physical/${child.id}`, {
+            method: "GET",
+          })
+          const data5 = await response5.json();
+          child.correctAnswers = data5.data;
+          child.totalQuestions = 500;
+        })
+
+        const response3 = await fetch(`http://localhost:8080/public/games/user/${userId}`, {
+          method: "GET",
+        })
+
+        if (!response3.ok) {
+          throw new Error("Failed to fetch user child data")
+        }
+        const data3 = await response3.json();
+        setTotalquiz(data3.data.length);
       } catch (error) {
         console.error("Error fetching data:", error)
       } finally {
         setLoading(false)
       }
-      const response = await fetch(`http://localhost:8080/public/child/user/${userid}`,
-        {
-          method: "GET", // Use GET because the backend expects query parameters
-        }
-      )
-  
-      if (!response.ok) {
-        throw new Error("Login failed. Please check your credentials.")
-      }
-  
-      const data = await response.json()
-      // Get the 'user' data from localStorage
-      // Store user data in localStorage or sessionStorage
-      console.log("User Child:", data.data)
-      setNchild(data.data);
-      console.log("User Child:", nchild);
-      
-      const response2 = await fetch(`http://localhost:8080/public/user/child/${userid}`,
-        {
-          method: "GET", // Use GET because the backend expects query parameters
-        }
-      )
-  
-      if (!response2.ok) {
-        throw new Error("Login failed. Please check your credentials.")
-      }
-  
-      const data_child = await response2.json()
-      // Get the 'user' data from localStorage
-      // Store chiuser data in localStorage or sessionStorage
-      console.log("User Child:", data_child.data)
-      console.log("User Child:", data_child.data[0].name);
-      console.log("User Child:", data_child.data[0].age);
-
-      // Populate the mockChildren data from data_child.data
-      
-      
-      const updatedChildren = data_child.data.map((child: { name: any; age: any;}) => ({
-        name: child.name,
-        age: child.age,
-      }));
-
-      setChildren(updatedChildren);
-
-    
-    
-    
     }
 
-      
-
     fetchData()
-  }, [])
+  }, [userId])
 
   const calculateOverallProgress = () => {
     const totalCorrect = children.reduce((sum, child) => sum + child.correctAnswers, 0)
@@ -214,7 +206,7 @@ export default function ParentDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{children.reduce((sum, child) => sum + child.totalQuizzes, 0)}</div>
+              <div className="text-3xl font-bold">{totalquiz}</div>
               <p className="text-white/70">Completed quizzes</p>
             </CardContent>
           </Card>
@@ -249,13 +241,13 @@ export default function ParentDashboard() {
               <TabsContent value="children" className="p-6 animate-in fade-in-50 duration-300">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {children.map((child) => (
-                    <Card key={child.name} className="bg-white/10 backdrop-blur-sm text-white border-white/10 hover:translate-y-[-4px] transition-all duration-300">
+                    <Card key={child.id} className="bg-white/10 backdrop-blur-sm text-white border-white/10 hover:translate-y-[-4px] transition-all duration-300">
                       <CardHeader className="bg-gradient-to-r from-purple-600/30 to-indigo-600/30 pb-2">
                         <CardTitle>{child.name}</CardTitle>
                         <CardDescription className="text-white/70">Age: {child.age}</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-4">
-                        {/* <div className="space-y-4">
+                        <div className="space-y-4">
                           <div>
                             <div className="flex justify-between mb-1">
                               <span>Quiz Progress</span>
@@ -268,10 +260,10 @@ export default function ParentDashboard() {
                           </div>
 
                           <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-white/5 p-3 rounded-lg">
+                            {/* <div className="bg-white/5 p-3 rounded-lg">
                               <div className="text-sm text-white/70">Quizzes</div>
                               <div className="text-xl font-bold">{child.totalQuizzes}</div>
-                            </div>
+                            </div> */}
                             <div className="bg-white/5 p-3 rounded-lg">
                               <div className="text-sm text-white/70">Correct</div>
                               <div className="text-xl font-bold">
@@ -279,7 +271,7 @@ export default function ParentDashboard() {
                               </div>
                             </div>
                           </div>
-                        </div> */}
+                        </div>
                       </CardContent>
                       <CardFooter className="bg-white/5 border-t border-white/10 pt-2 pb-2">
                         <Button variant="ghost" className="text-white/70 hover:text-white w-full">
@@ -347,9 +339,6 @@ export default function ParentDashboard() {
         </div>
 
         {/* Hidden FetchHiData for development purposes */}
-        <div className="hidden">
-          <FetchHiData />
-        </div>
       </div>
     </div>
   )
