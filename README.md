@@ -1,1 +1,0 @@
-# pickhacks2025
