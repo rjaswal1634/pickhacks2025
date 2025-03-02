@@ -1,3 +1,4 @@
+
 {
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -19,6 +20,8 @@
       }
     ],
     "paths": {
+      "baseUrl": ".",
+      "api/*": ["api/*"],
       "@/*": ["./*"]
     }
   },

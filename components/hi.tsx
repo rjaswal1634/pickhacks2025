@@ -1,36 +1,48 @@
 import React, { useEffect, useState } from 'react';
 
-// Updated interface based on the new response structure
+// Step 1: Define the interface for the response data structure.
 interface ApiResponse {
   statusCode: string;
   message: string;
   data: string;
 }
 
-const FetchDataExample: React.FC = () => {
+const FetchHiData: React.FC = () => {
+  // Step 2: Set up state to manage the response data, loading state, and any errors.
   const [response, setResponse] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Step 3: Define the async function to fetch data from the API.
     const fetchData = async () => {
       try {
-        const response = await fetch('https://api.example.com/data');
-        if (!response.ok) {
+        // Fetch data from the local API
+        const res = await fetch('http://localhost:8080/public/hi');
+        if (!res.ok) {
+          // If the response is not okay, throw an error.
           throw new Error('Network response was not ok');
         }
-        const result: ApiResponse = await response.json();
+
+        // Step 4: Parse the response as JSON
+        const result: ApiResponse = await res.json();
+        
+        // Set the response data into state
         setResponse(result);
       } catch (error) {
+        // Handle errors (network, API, etc.)
         setError('Failed to fetch data');
       } finally {
+        // Step 5: Set loading to false once the fetch completes
         setLoading(false);
       }
     };
 
+    // Call the fetchData function
     fetchData();
-  }, []);
+  }, []); // Empty dependency array means this will run once when the component mounts.
 
+  // Step 6: Render loading, error, or the data
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -50,4 +62,4 @@ const FetchDataExample: React.FC = () => {
   );
 };
 
-export default FetchDataExample;
+export default FetchHiData;

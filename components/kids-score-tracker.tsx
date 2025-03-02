@@ -13,8 +13,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, BarChart3, Users, Award } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 
+
 const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
-const API_KEY = "YOUR_GEMINI_API_KEY";
+const API_KEY = "AIzaSyDPk-o3GJGkK_vPyh_15XCFYVhqPy8N9EA";
 
 
 export interface KidsScoreTrackerProps {
@@ -69,6 +70,12 @@ export default function KidsScoreTracker({kidsData}: KidsScoreTrackerProps) {
                   </div>
                 </div>
               </div>
+
+              <div className="bg-white/50 p-3 rounded-lg">
+                  <div className="text-xl font-bold">Gementor</div>
+                  <ExplainJsonComponent />
+                </div>
+
             </div>
           </CardContent>
         </Card>

@@ -202,7 +202,66 @@ const gameData: Game[] = [
       },
     ],
   },
-  { id: 3, title: "Video Game 3", url: "https://www.youtube.com/watch?v=L8A4XbM5sXA", questions: [] },
+  {
+    id: 3,
+    "url": "https://www.youtube.com/watch?v=21D7QP9cN9s",
+    "title": "Dora's Rescue in Mermaid Kingdom",
+    "questions": [
+      {
+        questionStart: "3:57",
+        questionTime: "4:01",
+        questionEnd: "4:05",
+        choices: {
+          left: "Garden",
+          hand: "Rocks",
+          right: "Mermaids",
+          leftKnee: "Coral",
+          rightKnee: "Fish"
+        },
+        answer: "Garden"
+      },
+      {
+        questionStart: "10:42",
+        questionTime: "10:55",
+        questionEnd: "10:58",
+        choices: {
+          left: "Garden",
+          hand: "Rocks",
+          right: "Mermaids",
+          leftKnee: "Coral",
+          rightKnee: "Fish"
+        },
+        "answer": "Rocks"
+      },
+      {
+        questionStart: "11:04",
+        questionTime: "11:13",
+        questionEnd: "11:15",
+        choices: {
+          left: "Claws",
+          right: "Jellyfishes",
+          hand: "Shells",
+          leftKnee: "Seaweed", 
+          rightKnee: "Crabs"
+        },
+        answer: "Claws"
+      },
+      {
+        questionStart: "16:54",
+        questionTime: "17:01",
+        questionEnd: "17:02",
+        choices: {
+          left: "Garden",
+          hand: "Rocks",
+          right: "Mermaids",
+          leftKnee: "Coral",
+          rightKnee: "Fish"
+        },
+        answer: "Mermaids"
+      }
+    ]
+  }
+,
 ];
 
 const backend_url = "http://localhost:5000";

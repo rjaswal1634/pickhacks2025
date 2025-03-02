@@ -1,18 +1,26 @@
 "use client"
-
+import dotenv from "dotenv"
+dotenv.config()
 import type React from "react"
 import { useState, useEffect } from "react"
 
+const MAX_HISTORY_TOKENS = 10000 // maximum token
+
 // API key should be in an environment variable in production
-const API_KEY = "AIzaSyDPk-o3GJGkK_vPyh_15XCFYVhqPy8N9EA"
+const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 // Updated to the correct endpoint for the free version of Gemini
 const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
-export default function Chat() {
+export interface KidsDataStrProps {
+  kidsData: string
+}
+
+export default function Chat({ kidsData }: KidsDataStrProps) {
   const [messages, setMessages] = useState<{ role: string; text: string }[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [conversationHistory, setConversationHistory] = useState<{ role: string; text: string }[]>([])
 
   useEffect(() => {
     const messageContainer = document.getElementById("message-container")
@@ -25,18 +33,51 @@ export default function Chat() {
     if (!input.trim()) return
 
     const userMessage = { role: "user", text: input }
+    // Store the original input for display purposes
     const userInput = input
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setLoading(true)
     setError(null)
 
+    // Add user message to conversation history
+    const updatedHistory = [...conversationHistory, userMessage]
+    setConversationHistory(updatedHistory)
+
     try {
       console.log("Sending request to Gementor API...")
+
+      // Build conversation context from history
+      // Simple token estimation: ~4 chars = 1 token
+      let historyText = ""
+      let estimatedTokens = 0
+      const tokenEstimatePerChar = 0.25
+
+      // Start from the most recent messages and go backwards
+      // until we approach the token limit
+      for (let i = updatedHistory.length - 1; i >= 0; i--) {
+        const msg = updatedHistory[i]
+        const msgText = `${msg.role}: ${msg.text}\n`
+        const msgTokens = msgText.length * tokenEstimatePerChar
+
+        // Check if adding this message would exceed our limit
+        // Reserve ~2000 tokens for the response and some buffer
+        if (estimatedTokens + msgTokens > MAX_HISTORY_TOKENS - 2000) {
+          break
+        }
+
+        // Add message to history context
+        historyText = msgText + historyText
+        estimatedTokens += msgTokens
+      }
+
+      // Combine kids data, conversation history, and current input
+      const enhancedInput = `${kidsData}\n\nPrevious conversation:\n${historyText}\n\nUser: ${userInput}`
+
       const requestBody = {
         contents: [
           {
-            parts: [{ text: userInput }],
+            parts: [{ text: enhancedInput }],
           },
         ],
         generationConfig: {
@@ -94,37 +135,52 @@ export default function Chat() {
         data.candidates[0].content.parts.length > 0
       ) {
         const botReply = data.candidates[0].content.parts[0].text
-        setMessages((prev) => [...prev, { role: "bot", text: botReply }])
+        const botMessage = { role: "bot", text: botReply }
+        setMessages((prev) => [...prev, botMessage])
+
+        // Add bot response to conversation history
+        setConversationHistory((prev) => [...prev, botMessage])
       } else if (data.promptFeedback && data.promptFeedback.blockReason) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "bot",
-            text: `Content blocked: ${data.promptFeedback.blockReason}`,
-          },
-        ])
+        const blockedMessage = {
+          role: "bot",
+          text: `Content blocked: ${data.promptFeedback.blockReason}`,
+        }
+        setMessages((prev) => [...prev, blockedMessage])
+
+        // Add blocked response to conversation history
+        setConversationHistory((prev) => [...prev, blockedMessage])
       } else {
         console.error("Unexpected response structure:", data)
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "bot",
-            text: "Received an unexpected response format from the API.",
-          },
-        ])
+        const errorMessage = {
+          role: "bot",
+          text: "Received an unexpected response format from the API.",
+        }
+        setMessages((prev) => [...prev, errorMessage])
+
+        // Add error message to conversation history
+        setConversationHistory((prev) => [...prev, errorMessage])
       }
     } catch (error) {
       console.error("Error details:", error)
-      setError(error instanceof Error ? error.message : "Unknown error occurred")
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "bot",
-          text: `Error: ${error instanceof Error ? error.message : "Could not get a response"}`,
-        },
-      ])
+      const errorMsg = error instanceof Error ? error.message : "Unknown error occurred"
+      setError(errorMsg)
+      const errorMessage = {
+        role: "bot",
+        text: `Error: ${errorMsg}`,
+      }
+      setMessages((prev) => [...prev, errorMessage])
+
+      // Add error message to conversation history
+      setConversationHistory((prev) => [...prev, errorMessage])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const clearHistory = () => {
+    if (confirm("Are you sure you want to clear the conversation history?")) {
+      setMessages([])
+      setConversationHistory([])
     }
   }
 
@@ -175,6 +231,12 @@ export default function Chat() {
       </div>
 
       {error && <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-lg">{error}</div>}
+
+      <div className="flex justify-end mb-2">
+        <button onClick={clearHistory} className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded">
+          Clear History
+        </button>
+      </div>
 
       <div className="flex gap-2">
         <input

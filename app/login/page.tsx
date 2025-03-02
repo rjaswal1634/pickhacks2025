@@ -30,6 +30,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  let userid = 0;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,6 +55,11 @@ export default function LoginPage() {
       const data = await response.json()
   
       // Store user data in localStorage or sessionStorage
+      console.log("User data:", data)
+      console.log("User type:", data.message)
+      console.log("User id:", data.data)
+      userid = data.data;
+      console.log("User id:", userid);
       localStorage.setItem(
         "user",
         JSON.stringify({
